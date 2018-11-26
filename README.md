@@ -5,11 +5,11 @@ PyTorch implementation for the paper:
 
 ### Dependencies
 
-+ pytorch（>=0.4)
-+ opencv
-+ matplotlib
-+ tensorboardX
-+ scikit-learn
++ PyTorch（>=0.4)
++ OpenCV
++ Matplotlib
++ TensorboardX
++ Scikit Learn
 
 The recommended way to install the dependency is
 ```bash
