@@ -6,7 +6,7 @@ PyTorch implementation for the paper:
 ### Dependencies
 
 + pytorch（>=0.4)
-+ opencV
++ opencv
 + matplotlib
 + tensorboardX
 + scikit-learn
