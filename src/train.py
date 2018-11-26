@@ -3,10 +3,9 @@ import os
 from tqdm import tqdm
 
 import metrics
+from configs.config import Config
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-
-from configs.config import Config
 
 config = Config()
 
@@ -63,7 +62,6 @@ val_loader = data_loader.ValDataLoader(
 z_sampler = data_loader.ZSampler(config.use_normal_noise)
 p_sampler = data_loader.PSampler()
 
-
 # Gan Model
 gan = GAN(config)
 
@@ -80,13 +78,13 @@ def validate(batch, iter_no):
 
     pred_vox = gan.predict_voxel(x)
 
-    iou_t_05 = metrics.iou_t(gt_vox, pred_vox, threshold=0.5)
-    iou_t_04 = metrics.iou_t(gt_vox, pred_vox, threshold=0.4)
+    t05_iou = metrics.iou_t(gt_vox, pred_vox, threshold=0.5).mean()
+    t04_iou = metrics.iou_t(gt_vox, pred_vox, threshold=0.4).mean()
     max_iou = metrics.maxIoU(gt_vox, pred_vox)
     avg_precision = metrics.average_precision(gt_vox, pred_vox)
 
-    val_writer.add_scalar('iou_t_0.5', iou_t_05, iter_no)
-    val_writer.add_scalar('iou_t_0.4', iou_t_04, iter_no)
+    val_writer.add_scalar('t05_iou', t05_iou, iter_no)
+    val_writer.add_scalar('t04_iou', t04_iou, iter_no)
     val_writer.add_scalar('max_iou', max_iou, iter_no)
     val_writer.add_scalar('avg_precision', avg_precision, iter_no)
 

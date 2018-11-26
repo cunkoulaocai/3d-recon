@@ -148,8 +148,6 @@ class TrainDataset(data.Dataset):
         self.uris_super = []
         self.uris_unsuper = []
 
-        print len(self.modelid_nopose) * len(self.vp_pairs) * len(self.modelid_nopose) * self.viewpoints
-
         for mid_pose in self.modelid_withpose:
             for i, j in self.vp_pairs:
                 fname_i, fname_j = self.models[mid_pose][i], self.models[mid_pose][j]
