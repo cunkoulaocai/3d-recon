@@ -212,10 +212,11 @@ def project_perspective(vg, coor_array, batch_size=128, size=32, temperature=1.,
                         projector_pooling='exp', verbose=0):
     """
     Args:
-        [vg]    (np.array [b]x[n]x[n]x[n])      Voxel grid
-        [coor]  (list(list(list([x,y,z]))))     The coordinate of the perspective projection
-    Rets:
-        [img]   (np.array [b]x[n]x[n])              Projected image
+        [vg]    (np.array [b] x [n] x [n] x [n])      Voxel grid
+        [coor]  (list(list(list([x,y,z]))))           The coordinate of the perspective projection
+
+    Return:
+        [img]   (np.array [b] x [n] x [n])            Projected image
     """
     vg_t = vg.permute([1, 2, 3, 0])
 
@@ -326,12 +327,14 @@ class Projector(nn.Module):
                 size=self.resolution, projector_pooling=self.projector_pooling,
                 temperature=self.temperature, verbose=0)
             p = p[:, None]
+
         elif self.projection_typ == 'perspective_fast':
             p = project_perspective_fast(
                 rotated, self.mask_batch, self.coor_batch, batch_size=self.batch_size,
                 size=self.resolution, projector_pooling=self.projector_pooling,
                 temperature=self.temperature, verbose=0)
             p = tf.expand_dims(p, -1)
+
         elif self.projection_typ == 'orthographic_fast':
             p = projection_orthographic(
                 rotated, size=self.vox_size, temperature=self.temperature)

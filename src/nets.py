@@ -1,8 +1,6 @@
 import torch as tr
 from torch import nn
-from torch.nn import functional as F
 
-from config import Config
 from modules import Conv2DBlock, DenseBlock, ConvT3DBlock
 
 

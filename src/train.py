@@ -1,12 +1,12 @@
 import os
 
-from tqdm import trange
+from tqdm import tqdm
 
 import metrics
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
-from config import Config
+from configs.config import Config
 
 config = Config()
 
@@ -41,6 +41,7 @@ for cate, split in data_val:
     p = os.path.join(dir_path, "data", "%s_32x32alpha_perspective_d100_r32_vp24_random_default" % cate, split)
     val_setting.append(p)
 
+# Training DataLoader
 train_loader = data_loader.TrainDataLoader(
     train_setting,
     shape=[config.resolution, config.resolution, 1],
@@ -50,6 +51,7 @@ train_loader = data_loader.TrainDataLoader(
     shuffle=True
 )
 
+# Validation DataLoader
 val_loader = data_loader.ValDataLoader(
     val_setting,
     shape=[config.resolution, config.resolution, 1],
@@ -57,9 +59,12 @@ val_loader = data_loader.ValDataLoader(
     binarize_data=config.binarize_data
 )
 
+# Noise Samplers for embeddings Z and pose P
 z_sampler = data_loader.ZSampler(config.use_normal_noise)
 p_sampler = data_loader.PSampler()
 
+
+# Gan Model
 gan = GAN(config)
 
 
@@ -78,10 +83,12 @@ def validate(batch, iter_no):
     iou_t_05 = metrics.iou_t(gt_vox, pred_vox, threshold=0.5)
     iou_t_04 = metrics.iou_t(gt_vox, pred_vox, threshold=0.4)
     max_iou = metrics.maxIoU(gt_vox, pred_vox)
+    avg_precision = metrics.average_precision(gt_vox, pred_vox)
 
     val_writer.add_scalar('iou_t_0.5', iou_t_05, iter_no)
     val_writer.add_scalar('iou_t_0.4', iou_t_04, iter_no)
     val_writer.add_scalar('max_iou', max_iou, iter_no)
+    val_writer.add_scalar('avg_precision', avg_precision, iter_no)
 
 
 def train_step(iter_no, batch):
@@ -133,13 +140,15 @@ batch_size = config.batch_size
 train_writer = SummaryWriter(log_dir='../logs/train')
 val_writer = SummaryWriter(log_dir='../logs/val')
 
-for iter_no in trange(max_iters):
-    train_batch = train_loader.next_batch()
+with tqdm(total=max_iters) as pbar:
+    for iter_no in range(max_iters):
+        train_batch = train_loader.next_batch()
 
-    gan.train()
-    train_step(iter_no, train_batch)
+        gan.train()
+        train_step(iter_no, train_batch)
 
-    if iter_no % config.validation_interval == 0:
-        val_batch = val_loader.next_batch()
-        gan.eval()
-        validate(val_batch, iter_no)
+        if iter_no % config.validation_interval == 0:
+            val_batch = val_loader.next_batch()
+            gan.eval()
+            validate(val_batch, iter_no)
+            pbar.update(1)

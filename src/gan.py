@@ -34,6 +34,14 @@ class GAN(nn.Module):
             self.d_adv_opt = optim.Adam(self.d_net.parameters(), weight_decay=weight_decay)
 
     def compute_ae_losses(self, x1, p1, x2, p2):
+        """
+        Compute Auto Encoder Losses: L_reconstruction, L_pose_invariance (on representations), L_pose_invariance(on voxels)
+        :param x1: Image 1
+        :param p1: Camera Angles for Image 1
+        :param x2: Image 2
+        :param p2: Camera Angles for Image 2
+        :return: l_autoencoder, l_recon, l_pinv, l_vinv
+        """
         z1 = self.e_net(x1)
         z2 = self.e_net(x2)
 
@@ -66,11 +74,13 @@ class GAN(nn.Module):
         f_logits = self.d_net(x_fake)
 
         if self.config.gan_loss_type.lower() == 'dcgan':
+            # DCGAN Implementation for Adversarial Losses
             d_real_loss = F.binary_cross_entropy_with_logits(r_logits, tr.ones_like(r_logits))
             d_fake_loss = F.binary_cross_entropy_with_logits(f_logits, tr.zeros_like(f_logits))
             g_loss = F.binary_cross_entropy_with_logits(f_logits, tr.ones_like(r_logits))
 
         elif self.config.gan_loss_type.lower() == 'lsgsn':
+            # LSGAN Implementation for Adversarial Losses
             d_real_loss = F.mse_loss(r_logits, tr.ones_like(r_logits))
             d_fake_loss = F.mse_loss(f_logits, -tr.ones_like(f_logits))
             g_loss = F.mse_loss(f_logits, tr.ones_like(r_logits))
@@ -78,7 +88,10 @@ class GAN(nn.Module):
         d_loss = 0.5 * (d_real_loss + d_fake_loss)
 
         if report_accurcies:
+            # Predictions for real samples
             r_preds = (r_logits >= 0).float()
+
+            # Predictions for generated samples
             f_preds = (f_logits >= 0).float()
 
             d_real_acc = tr.mean(r_preds) * 100
@@ -93,6 +106,7 @@ class GAN(nn.Module):
             return d_loss, g_loss
 
     def compute_gan_accuracies(self, x, z, p):
+        """ Discriminator and Generator Accuracies"""
         v_fake = self.g_net(z)
         x_fake = self.p_net(v_fake, p)
 
@@ -109,6 +123,7 @@ class GAN(nn.Module):
         return d_acc, g_acc
 
     def step_train_autoencoder(self, x1, p1, x2, p2):
+        """ Single Step Encoder Decoder training using Consistency Losses"""
         l_autoencoder, l_recon, l_pinv, l_vinv = self.compute_ae_losses(x1, p1, x2, p2)
         self.e_opt.zero_grad()
         self.g_opt.zero_grad()
@@ -121,6 +136,7 @@ class GAN(nn.Module):
         return l_autoencoder, l_recon, l_pinv, l_vinv
 
     def step_train_gan(self, x, z, p, mode, report_accuracies=True):
+        """ Single Step Decoder | Generator training using Adversarial Losses"""
         measures = self.compute_adv_losses(x, z, p, report_accuracies)
 
         d_loss, g_loss = measures[:2]
@@ -137,6 +153,7 @@ class GAN(nn.Module):
         return measures
 
     def predict_voxel(self, img):
+        """ Predict Voxel given a single view projection image"""
         with tr.no_grad():
             vox = self.g_net(self.e_net(img))
             return vox

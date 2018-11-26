@@ -33,5 +33,5 @@ def maxIoU(gtrs_vox, pred_vox, step=1e-1):
         iou = iou_t(gtrs_vox, pred_vox, threshold=t)[None, :]
         ious.append(iou)
 
-    ious = tr.cat(ious, axis=0)
-    return tr.mean(tr.max(ious, dim=0))
+    ious = tr.cat(ious, dim=0)
+    return tr.mean(tr.max(ious, dim=0)[0])

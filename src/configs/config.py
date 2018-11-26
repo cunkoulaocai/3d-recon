@@ -1,4 +1,4 @@
-from training_setting import configs
+from category_settings import configs
 
 
 class Config():
