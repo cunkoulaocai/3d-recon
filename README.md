@@ -1,4 +1,3 @@
-# 3d-recon
 # Learning Single-View 3D Reconstruction with Limited Pose Supervision
 PyTorch implementation for the paper:
 
